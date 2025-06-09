@@ -1,128 +1,3 @@
-<style>
-    body {
-        background: linear-gradient(135deg, #e3f0ff 0%, #f9fbff 100%);
-        font-family: 'Segoe UI', Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .chat-container {
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-        width: 100%;
-        max-width: 400px;
-        min-height: 550px;
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-        overflow: hidden;
-    }
-    .chat-container h2 {
-        background: linear-gradient(90deg, #4f8cff 60%, #a0c4ff 100%);
-        color: #fff;
-        margin: 0;
-        padding: 24px 0 18px 0;
-        text-align: center;
-        font-weight: 600;
-        letter-spacing: 1px;
-        font-size: 1.5rem;
-        border-bottom-left-radius: 40px 20px;
-        border-bottom-right-radius: 40px 20px;
-        box-shadow: 0 2px 8px rgba(79, 140, 255, 0.08);
-    }
-    #chat-box {
-        flex: 1;
-        padding: 24px 18px 12px 18px;
-        overflow-y: auto;
-        background: #f4f8ff;
-        border-radius: 0 0 20px 20px;
-        margin-bottom: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-    .user-msg, .bot-msg {
-        max-width: 80%;
-        padding: 12px 18px;
-        border-radius: 18px;
-        font-size: 1rem;
-        line-height: 1.5;
-        word-break: break-word;
-        box-shadow: 0 2px 8px rgba(79, 140, 255, 0.05);
-        margin-bottom: 2px;
-        display: inline-block;
-    }
-    .user-msg {
-        background: #e3f0ff;
-        color: #2a4d7a;
-        align-self: flex-end;
-        border-bottom-right-radius: 6px;
-    }
-    .bot-msg {
-        background: #4f8cff;
-        color: #fff;
-        align-self: flex-start;
-        border-bottom-left-radius: 6px;
-    }
-    .input-area {
-        display: flex;
-        gap: 10px;
-        padding: 18px;
-        background: #fff;
-        border-top: 1px solid #e3f0ff;
-    }
-    #user-input {
-        flex: 1;
-        padding: 12px 16px;
-        border: 1px solid #c7e0ff;
-        border-radius: 12px;
-        font-size: 1rem;
-        outline: none;
-        transition: border 0.2s;
-        background: #f4f8ff;
-    }
-    #user-input:focus {
-        border: 1.5px solid #4f8cff;
-        background: #fff;
-    }
-    button {
-        background: linear-gradient(90deg, #4f8cff 60%, #a0c4ff 100%);
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        padding: 0 22px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(79, 140, 255, 0.08);
-        transition: background 0.2s, box-shadow 0.2s;
-    }
-    button:hover {
-        background: linear-gradient(90deg, #3a7be0 60%, #7fbfff 100%);
-        box-shadow: 0 4px 16px rgba(79, 140, 255, 0.15);
-    }
-    @media (max-width: 500px) {
-        .chat-container {
-            max-width: 100vw;
-            min-height: 100vh;
-            border-radius: 0;
-        }
-        .chat-container h2 {
-            font-size: 1.2rem;
-            padding: 18px 0 12px 0;
-        }
-        #chat-box {
-            padding: 14px 8px 8px 8px;
-        }
-        .input-area {
-            padding: 10px;
-        }
-    }
-</style>
 <!DOCTYPE html>
 <html>
 <head>
@@ -133,29 +8,100 @@
     <div class="chat-container">
         <h2>Banking Assistant</h2>
         <div id="chat-box"></div>
-        <input type="text" id="user-input" placeholder="Ask me something..." autofocus>
-        <button onclick="sendMessage()">Send</button>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ask me something..." autofocus>
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
     <script>
+        // Set avatar image paths
+        const userAvatar = "/static/user.jpeg";
+        const botAvatar = "/static/bot.jpg";
+
         async function sendMessage() {
-            const userInput = document.getElementById("user-input").value;
+            const userInputElem = document.getElementById("user-input");
+            const userInput = userInputElem.value.trim();
             if (!userInput) return;
 
             const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<div class="user-msg">You: ${userInput}</div>`;
+            // Add user message with avatar
+            chatBox.innerHTML += `
+                <div class="msg-row user">
+                    <div class="avatar"><img src="${userAvatar}" alt="User"></div>
+                    <div class="user-msg">${userInput}</div>
+                </div>
+            `;
 
-            const response = await fetch("/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput })
-            });
-
-            const data = await response.json();
-            chatBox.innerHTML += `<div class="bot-msg">Bot: ${data.reply}</div>`;
-            document.getElementById("user-input").value = "";
+            userInputElem.value = "";
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Show bot typing animation
+            const typingId = "bot-typing";
+            chatBox.innerHTML += `
+                <div class="msg-row bot" id="${typingId}">
+                    <div class="avatar"><img src="${botAvatar}" alt="Bot"></div>
+                    <div class="bot-msg"><span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>
+                </div>
+            `;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userInput })
+                });
+                const data = await response.json();
+
+                // Remove typing animation
+                const typingElem = document.getElementById(typingId);
+                if (typingElem) typingElem.remove();
+
+                // Add bot reply with avatar
+                chatBox.innerHTML += `
+                    <div class="msg-row bot">
+                        <div class="avatar"><img src="${botAvatar}" alt="Bot"></div>
+                        <div class="bot-msg">${data.reply}</div>
+                    </div>
+                `;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (err) {
+                // Remove typing animation
+                const typingElem = document.getElementById(typingId);
+                if (typingElem) typingElem.remove();
+
+                chatBox.innerHTML += `
+                    <div class="msg-row bot">
+                        <div class="avatar"><img src="${botAvatar}" alt="Bot"></div>
+                        <div class="bot-msg">Sorry, something went wrong.</div>
+                    </div>
+                `;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
         }
+
+        // Send message on Enter key
+        document.getElementById("user-input").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") sendMessage();
+        });
     </script>
+    <style>
+        /* Add animated typing dots for bot */
+        .typing-dots {
+            display: inline-block;
+        }
+        .typing-dots span {
+            display: inline-block;
+            font-size: 1.5em;
+            animation: blink 1s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.2; }
+            40% { opacity: 1; }
+        }
+    </style>
 </body>
 </html>
